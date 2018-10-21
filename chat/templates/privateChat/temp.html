@@ -1,0 +1,37 @@
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-3 col-md-offset-9">
+                    <span class="pull-right" hidden id="typing-text">
+                        <strong>{{ opponent_username }} {% trans "is typing..." %}</strong>
+                    </span>
+                </div>
+                <p>
+                    {{ opponent_username }}
+                </p>
+                <p class="text-success" id="online-status" style="display: none">{% trans "Online" %}</p>
+                <p class="text-danger" id="offline-status" style="display: none">{% trans "Offline" %}</p>
+
+                <div class="messages-container">
+                    <div id="messages" class="messages">
+                        {% for msg in active_dialog.messages.all %}
+                            <div class="row {% if msg.read %}msg-read{% else %}msg-unread{% endif %}"
+                                 data-id="{{ msg.id }}">
+                        {% if msg.sender == request.user %}
+                        <p class="pull-right">
+                            <span class="username">{{ msg.sender.username }}:</span>
+                            {{ msg.text }}&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                            <span class="timestamp">&ndash; <span data-livestamp="{{ msg.get_formatted_create_datetime }}">{{ msg.get_formatted_create_datetime }}</span></span>
+                        </p>
+
+                        {% else %}
+                        <p class="pull-left">
+                            <span class="username">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{{ msg.sender.username }}:</span>
+                            {{ msg.text }}
+                            <span class="timestamp">&ndash; <span data-livestamp="{{ msg.get_formatted_create_datetime }}">{{ msg.get_formatted_create_datetime }}</span></span>
+                        </p>
+                        {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>

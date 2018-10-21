@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block nav-right %}
+<li><a href="{% url 'user:add_friend' %}">添加好友</a></li>
+<li><a href="{% url 'chat:chatList' %}">加入私聊</a></li>
+<li><a href="{% url 'chat:home' %}">加入群聊</a></li>
+{% endblock %}
+{% block content %}
+{% load friendshiptags %}
+<h1>Your Friends</h1>
+{% get_by_name friendship_context_object_name as var %}
+{% friends var %}
+{% endblock %}

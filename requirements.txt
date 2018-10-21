@@ -1,0 +1,5 @@
+django==2.1.2
+channels==2.1.3
+django-bootstrap3==11.0.0
+django-private-chat==0.1.9
+markdown==3.0.1

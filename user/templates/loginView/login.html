@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}登录{% endblock %}
+{% block css %}
+    <link href="{% static 'css/login.css' %}" rel="stylesheet" />
+{% endblock %}
+{% block content %}
+    <div class="col-md-offset-4 col-md-4">
+    <h2>Login</h2>
+    {% if message %}
+    {{ message }}
+    {% endif %}
+    <div class="form-wrapper">
+        <form method="post" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+           <div class="fieldWrapper">
+        {{ field.errors }}
+        {{ field.label_tag }} {{ field }}
+        {% if field.help_text %}
+             <p class="help">{{ field.help_text|safe }}</p>
+        {% endif %}
+           </div>
+        {% endfor %}
+      <button type="reset" class="btn btn-primary pull-left" href="{% url 'user:register' %}">重置</button>
+      <button type="submit" value="Login" class="btn btn-default">登陆</button>
+   </form>
+   </div>
+    <br>
+   <a href="{% url 'user:register' %}">没有帐号？&nbsp&nbsp请先注册</a>
+ </div>
+{% endblock %}

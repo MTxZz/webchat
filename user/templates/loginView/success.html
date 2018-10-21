@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}注册成功{% endblock %}
+{% block content %}
+    <div class="row">
+        <h1 class="text-center">注册成功！<br>即将跳转到登陆页面...</h1>
+    </div>
+    <script>
+        window.setTimeout("window.location='/accounts/login/'",2000);
+    </script>
+{% endblock %}

@@ -1,0 +1,72 @@
+
+{% load staticfiles %}
+{% load static %}
+{% load bootstrap3 %}
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="{% static "css/bootstrap.css" %}" rel="stylesheet" type="text/css" media="all">
+    <link href="{% static "css/style.css" %}" rel="stylesheet" type="text/css" media="all">
+    <link href="{% static "css/login.css" %}" rel="stylesheet">
+    <link href="{% static "css/chat.css" %}" rel="stylesheet">
+    <link href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+</head>
+<body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#my-nav" aria-expanded="false">
+            <span class="sr-only">切换导航条</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">WebChat</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="my-nav">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="{% url 'index' %}">主页</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+          {% block nav-right %}{% endblock %}
+              {% if request.user.is_authenticated %}
+                  <li><a href="#">当前在线：{{ request.user.username }}</a></li>
+                  {% url 'user:friendship_view_friends arg1=request.user.username' as fri_url%}
+                  <li><a href="{% url 'user:friendship_view_friends' request.user.username %}">好友管理</a></li>
+                  <li><a href="{% url 'user:friendship_view_users' %}">所有用户</a></li>
+                  <li><a href="{% url 'user:logout' %}">登出</a></li>
+              {% else %}
+                  <li><a href="{% url 'user:login' %}">登录</a></li>
+                  <li><a href="{% url 'user:register' %}">注册</a></li>
+              {% endif %}
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+        <script src="{% static "js/jquery.min.js" %}" type="text/javascript"></script>
+        <script src="{% static "js/bootstrap.min.js" %}" type="text/javascript"></script>
+        <script src="{% static "js/handlebars-v1.3.0.js" %}" type="text/javascript"></script>
+        {% block extra_js %}{% endblock %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'js/jquery-3.2.1.js' %}"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+</body>
+    {% block js %}
+    {% endblock %}
+</html>>

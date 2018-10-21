@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block nav-right %}
+<li><a href="{% url 'user:friendship_request_list' %}">好友请求</a></li>
+{% endblock %}
+{% block content %}
+<div class="form-group">
+    <label for="name-input">Which user would you like to add?</label>
+    <input type="text" class="form-control" id="name-input">
+</div>
+    <input id="name-submit" class="btn btn-success" type="button" value="Add" />
+{% endblock %}
+
+{% block js %}
+<script>
+    $("#name-input").focus();
+    $("#name-input").keyup(function(e){
+      if (e.keyCode === 13) {  // enter, return
+            $("#name-submit").click();
+        }
+    });
+
+    $("#name-submit").click(function() {
+      var name = $("#name-input").val();
+      window.location.pathname = '/friend/add/' + name + '/';
+    });
+</script>
+{% endblock %}

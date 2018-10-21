@@ -1,0 +1,769 @@
+{% extends "base.html" %}
+{% load static %}
+{% load staticfiles %}
+{% load i18n %}
+{% block css %}
+{% endblock css %}
+{% load chatcus %}
+    {{ block.super }}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>超级无敌那么牛逼的web微信聊天开始</title>
+    <link rel="stylesheet" href="{% static "css/bootstrap.css" %}" />
+    <link rel="stylesheet" href="{% static "plugins/font-awesome/css/font-awesome.css" %}" />
+    <link rel="stylesheet" href="{% static "css/index.css" %}" />
+    <style rel="stylesheet">
+.comment{width:680px; margin:20px auto; position:relative; background:#fff; padding:20px 50px 50px; border:1px solid #DDD; border-radius:5px;}
+.comment h3{height:28px; line-height:28px}
+.com_form{width:100%; position:relative}
+.input{width:99%; height:60px; border:1px solid #ccc}
+.com_form p{height:28px; line-height:28px; position:relative; margin-top:10px;}
+span.emotion{width:42px; height:20px; background:url(http://www.16code.com/cache/demos/user-say/img/icon.gif) no-repeat 2px 2px; padding-left:20px; cursor:pointer}
+span.emotion:hover{background-position:2px -28px}
+.qqFace{margin-top:4px;background:#fff;padding:2px;border:1px #dfe6f6 solid;}
+.qqFace table td{padding:0px;}
+.qqFace table td img{cursor:pointer;border:1px #fff solid;}
+.qqFace table td img:hover{border:1px #0066cc solid;}
+.qqFace table td img:hover{border:1px #0066cc solid;}
+    </style>
+    </head>
+<body>
+{#左侧面板#}
+    <div class="main-chat">
+        <div class="panel">
+                {# 用户信息开始#}
+            <div class="userinfo">
+                <div class="info">
+                    <h3 class="user_name">
+                        <span class="display_name">{{ request.user.userprofile.name }}</span>
+                    </h3>
+                </div>
+            </div>
+            {#  用户信息结束   #}
+        {#   搜索框开始#}
+            <div id="search" class="search">
+                <i class="web-search"></i>
+                    <input class="search_content"  id="search" type="text" placeholder="搜索">
+            </div>
+            <div id="searchhide" class="hide">
+                        <h4 class="contact_title">找不到匹配的结果</h4>
+            </div>
+        {#    搜索结束#}
+        {#  切换 #}
+            <div class="tab">
+    {#            聊天div#}
+                <div class="tab-item">
+                    <a href="#comment-tab" role="tab" data-toggle="tab" style="color: #4cae4c" title="聊天"  ><i class="chat-icon chat-comment"></i></a>
+                </div>
+    {#            联系人div#}
+                <div class="tab-item">
+                    <a href="#user-tab" role="tab" data-toggle="tab" title="通讯录"   ><i class="chat-icon chat-user"></i></a>
+                </div>
+    {#            群主div#}
+                <div class="tab-item">
+                    <a href="#group-tab" role="tab" data-toggle="tab" title="群组" ><i class="chat-icon chat-group"></i></a>
+                </div>
+            </div>
+    {#切换开始-------------------------------------------------------------------------------#}
+        <div class="tab-content">
+            {#用户切换#}
+                <div role="tabpanel" class="tab-pane active " id="comment-tab">
+                    <div class="friends-nav">
+                        {% for friend in request.user.userprofile.friends.select_related %}
+                            <div  contact-type="single" contact-id="{{ friend.id }}" onclick="OpenChatWindow(this)" class="chat_item actives">
+                                <div class="info">
+                                    <h3 class="friends-info">
+                                        <span class="friends-name">{{ friend.name }}</span>
+                                        <span style="float: right" class="badge hide">0</span>
+                                    </h3>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+    {#        聊天切换结束#}
+              {#通讯录切换#}
+                <div role="tabpanel" class="tab-pane" id="user-tab">
+                    <div class="friends-nav ">
+                        {% for friend in request.user.userprofile.friends.select_related %}
+                        <div  contact-type="single" contact-id="{{ friend.id }}" onclick="OpenChatWindow(this)"  class="chat_item actives">
+
+                            <div class="info">
+                                <h3 class="friends-info ">
+                                    <span class="friends-name">{{ friend.name }}</span>
+                                    <span style="float: right" class="badge hide">0</span>
+                                 </h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+    {#        通讯录切换结束#}
+                      {#群组切换#}
+                <div role="tabpanel" class="tab-pane" id="group-tab">
+                    <div class="friends-nav">
+                        {% for group  in request.user.userprofile.group_members.select_related %}
+                        <div contact-type="group" contact-id="{{ group.id }}" onclick="OpenChatWindow(this)"  class="chat_item actives">
+                            <div class="avatar">
+                                    <img class="img" src="{{ group.group_img | chat_url }}" />
+                            </div>
+                            <div class="info">
+                                <h3 class="friends-info">
+                                    <span class="friends-name">{{ group.name }}</span>
+                                    <span style="float: right" class="badge hide">0</span>
+                                 </h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+    {#        群组切换结束#}
+        </div>
+        </div>
+    {#切换结束-------------------------------------------------------------------------------#}
+    {#  左侧结束 #}
+<div class="chat-box">
+    <div class="chat-box-title" contact-type="" contact-id="">
+        <span class="pull-right" hidden id="typing-text">
+            <strong>{{ opponent_username }}正在输入...</strong>
+        </span>
+    </div>
+    <div class="title-info">
+        <p>
+            {{ opponent_username }}
+        </p>
+        <p class="text-success" id="online-status" style="display: none">在线</p>
+        <p class="text-danger" id="offline-status" style="display: none">离线</p>
+    </div>
+{#                    对方用户名结束#}
+{#                对话框开始#}
+
+{#                聊天对方的用户名#}
+<div class="chat-box-window">
+{#                    聊天创建内容#}
+{#                    <div  style="overflow: hidden;">#}
+{#<div class="message me" style="text-align:left;">#}
+    <div class="message me">
+        {% for msg in active_dialog.messages.all %}
+        <div class="message-info">
+        <div class="content">
+            <span class="timestamp">&ndash; <span data-livestamp="{{ msg.get_formatted_create_datetime }}">{{ msg.get_formatted_create_datetime }}</span></span>
+        </div>
+        </div>
+        <div class="content"  {% if msg.read %}msg-read{% else %}msg-unread{% endif %} {% if msg.sender != request.user %}opponent{% endif %}" data-id="{{ msg.id }}">
+            {% if msg.sender == request.user %}
+            <p class="pull-right">
+                <span class="username">{{ msg.sender.username }}:</span>
+                {{ msg.text }}&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+            </p>
+
+            {% else %}
+            <p class="pull-left">
+                <span class="username">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{{ msg.sender.username }}:</span>
+                {{ msg.text }}
+            </p>
+               {% endif %}
+        </div>
+        <br>
+        {% endfor %}
+{#</div>#}
+{#                    聊天窗口内容结束#}
+{#            对话框结束#}
+    </div>
+</div>
+{#                工具包#}
+    <div  style="height:4px;">
+      <div class="progress-bar" role="progressbar"  aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+       0%
+      </div>
+    </div>
+                <div class="chat-box-tools">
+                    <p class="chat-box-tools-emoj emotion"></p>
+                    <a class="chat-box-tools-screencut" title="截屏"></a>
+                    <a   onclick="FileUpload()" class="chat-box-tools-file_img"title="上传"></a>
+                    <input type="file" id="btnfile" style="display: none"/>
+                </div>
+{#                工具包结束#}
+{#                输入框#}
+
+        <div  contenteditable="true"  class="textflex">
+            <div class="row">
+                <div class="add-message">
+                    <div class="form-group">
+                        <textarea id="chat-message" class="form-control message"
+                                  placeholder="Enter your message"></textarea>
+                    </div>
+
+                </div>
+        </div>
+
+                <div class="form-group clearfix">
+                    <span class="desc">按下Ctrl+Enter换行</span>
+                    <input id="btn-send-message" type="submit" class="btn btn-primary pull-right send-message" style="margin-left: 10px;" value="Send"/>
+                </div>
+            </div>
+        </div>
+</body>
+</html>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/scrollMonitor.js' %}"
+            integrity="sha256-BseZlDlA+yL4qu+Voi82iFa5aaifralQEXIjOjaXgeo=" crossorigin="anonymous"></script>
+    <script>
+        var base_ws_server_path = "{{ ws_server_path }}";
+        $(document).ready(function () {
+            var websocket = null;
+            var monitor = null;
+
+            function initReadMessageHandler(containerMonitor, elem) {
+                var id = $(elem).data('id');
+                var elementWatcher = containerMonitor.create(elem);
+                elementWatcher.enterViewport(function () {
+                    var opponent_username = getOpponnentUsername();
+                    var packet = JSON.stringify({
+                        type: 'read_message',
+                        session_key: '{{ request.session.session_key }}',
+                        username: opponent_username,
+                        message_id: id
+                    });
+                    $(elem).removeClass('msg-unread').addClass('msg-read');
+                    websocket.send(packet);
+                });
+            }
+
+            function initScrollMonitor() {
+                var containerElement = $("#messages");
+                var containerMonitor = scrollMonitor.createContainer(containerElement);
+                $('.msg-unread').each(function (i, elem) {
+                    if ($(elem).hasClass('opponent')){
+                        initReadMessageHandler(containerMonitor, elem);
+                    }
+
+                });
+                return containerMonitor
+            }
+
+            function getOpponnentUsername() {
+                return "{{ opponent_username }}";
+            }
+
+            // TODO: Use for adding new dialog
+            function addNewUser(packet) {
+                $('#user-list').html('');
+                packet.value.forEach(function (userInfo) {
+                    if (userInfo.username == getUsername()) return;
+                    var tmpl = Handlebars.compile($('#user-list-item-template').html());
+                    $('#user-list').append(tmpl(userInfo))
+                });
+            }
+
+            function addNewMessage(packet) {
+                var msg_class = "";
+                if (packet['sender_name'] == $("#owner_username").val()) {
+                    msg_class = "pull-left";
+                } else {
+                    msg_class = "pull-right";
+                }
+                var msgElem =
+                    $('<div class="row msg-unread" data-id="' + packet.message_id + '">' +
+                        '<p class="' + msg_class + '">' +
+                        '<span class="username">' + packet['sender_name'] + ': </span>' +
+                        packet['message'] +
+                        ' <span class="timestamp">&ndash; <span data-livestamp="' + packet['created'] + '"> ' + packet['created'] + '</span></span> ' +
+                        '</p> ' +
+                        '</div>');
+                $('#messages').append(msgElem);
+                scrollToLastMessage()
+            }
+
+            function scrollToLastMessage() {
+                var $msgs = $('#messages');
+                $msgs.animate({"scrollTop": $msgs.prop('scrollHeight')})
+            }
+
+            function generateMessage(context) {
+                var tmpl = Handlebars.compile($('#chat-message-template').html());
+                return tmpl({msg: context})
+            }
+
+            function setUserOnlineOffline(username, online) {
+                var elem = $("#user-" + username);
+                if (online) {
+                    elem.attr("class", "btn btn-success");
+                } else {
+                    elem.attr("class", "btn btn-danger");
+                }
+            }
+
+            function gone_online() {
+                $("#offline-status").hide();
+                $("#online-status").show();
+            }
+
+            function gone_offline() {
+                $("#online-status").hide();
+                $("#offline-status").show();
+            }
+
+            function flash_user_button(username) {
+                var btn = $("#user-" + username);
+                btn.fadeTo(700, 0.1, function () {
+                    $(this).fadeTo(800, 1.0);
+                });
+            }
+
+            function setupChatWebSocket() {
+                var opponent_username = getOpponnentUsername();
+                websocket = new WebSocket(base_ws_server_path + '{{ request.session.session_key }}/' + opponent_username);
+
+                websocket.onopen = function (event) {
+                    var opponent_username = getOpponnentUsername();
+
+                    var onOnlineCheckPacket = JSON.stringify({
+                        type: "check-online",
+                        session_key: '{{ request.session.session_key }}',
+                        username: opponent_username
+                        {#                      Sending username because the user needs to know if his opponent is online #}
+                    });
+                    var onConnectPacket = JSON.stringify({
+                        type: "online",
+                        session_key: '{{ request.session.session_key }}'
+
+                    });
+
+                    console.log('connected, sending:', onConnectPacket);
+                    websocket.send(onConnectPacket);
+                    console.log('checking online opponents with:', onOnlineCheckPacket);
+                    websocket.send(onOnlineCheckPacket);
+                    monitor = initScrollMonitor();
+                };
+
+
+                window.onbeforeunload = function () {
+
+                    var onClosePacket = JSON.stringify({
+                        type: "offline",
+                        session_key: '{{ request.session.session_key }}',
+                        username: opponent_username,
+                        {# Sending username because to let opponnent know that the user went offline #}
+                    });
+                    console.log('unloading, sending:', onClosePacket);
+                    websocket.send(onClosePacket);
+                    websocket.close();
+                };
+
+
+                websocket.onmessage = function (event) {
+                    var packet;
+
+                    try {
+                        packet = JSON.parse(event.data);
+                        console.log(packet)
+                    } catch (e) {
+                        console.log(e);
+                    }
+
+                    switch (packet.type) {
+                        case "new-dialog":
+                            // TODO: add new dialog to dialog_list
+                            break;
+                        case "user-not-found":
+                            // TODO: dispay some kind of an error that the user is not found
+                            break;
+                        case "gone-online":
+                            if (packet.usernames.indexOf(opponent_username) != -1) {
+                                gone_online();
+                            } else {
+                                gone_offline();
+                            }
+                            for (var i = 0; i < packet.usernames.length; ++i) {
+                                setUserOnlineOffline(packet.usernames[i], true);
+                            }
+                            break;
+                        case "gone-offline":
+                            if (packet.username == opponent_username) {
+                                gone_offline();
+                            }
+                            setUserOnlineOffline(packet.username, false);
+                            break;
+                        case "new-message":
+                            var username = packet['sender_name'];
+                           if (username == opponent_username || username == $("#owner_username").val()){
+                                addNewMessage(packet);
+                                if (username == opponent_username) {
+                                    initReadMessageHandler(monitor, $("div[data-id='" + packet['message_id'] + "']"));
+                                }
+                            } else {
+                                if ($("#user-"+username).length == 0){
+                                    var new_button = $(''+
+                                        '<a href="/'+ username + '"' +
+                                        'id="user-'+username+'" class="btn btn-danger">Chat with '+username+'</a>');
+                                    $("#user-list-div").find("ul").append()
+                                }
+                                flash_user_button(username);
+
+                            }
+                            break;
+                        case "opponent-typing":
+                            var typing_elem = $('#typing-text');
+                            if (!typing_elem.is(":visible")) {
+                                typing_elem.fadeIn(500);
+                            } else {
+                                typing_elem.stop(true);
+                                typing_elem.fadeIn(0);
+                            }
+                            typing_elem.fadeOut(3000);
+                            break;
+                        case "opponent-read-message":
+                            if (packet['username'] == opponent_username) {
+                                $("div[data-id='" + packet['message_id'] + "']").removeClass('msg-unread').addClass('msg-read');
+                            }
+                            break;
+
+                        default:
+                            console.log('error: ', event)
+                    }
+                }
+            }
+
+            function sendMessage(message) {
+                var opponent_username = getOpponnentUsername();
+                var newMessagePacket = JSON.stringify({
+                    type: 'new-message',
+                    session_key: '{{ request.session.session_key }}',
+                    username: opponent_username,
+                    message: message
+                });
+                websocket.send(newMessagePacket)
+            }
+
+            $('#chat-message').keypress(function (e) {
+                if (e.which == 13 && this.value) {
+                    sendMessage(this.value);
+                    this.value = "";
+                    return false
+                } else {
+                    var opponent_username = getOpponnentUsername();
+                    var packet = JSON.stringify({
+                        type: 'is-typing',
+                        session_key: '{{ request.session.session_key }}',
+                        username: opponent_username,
+                        typing: true
+                    });
+                    websocket.send(packet);
+                }
+            });
+
+            $('#btn-send-message').click(function (e) {
+                var $chatInput = $('#chat-message');
+                var msg = $chatInput.val();
+                if (!msg) return;
+                sendMessage($chatInput.val());
+                $chatInput.val('')
+            });
+
+            setupChatWebSocket();
+            scrollToLastMessage();
+        });
+
+    </script>
+{% endblock %}
+{# -------------------------------------------------- #}
+
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/jquery.qqFace.js' %}"></script>
+<script src="{% static 'js/jq1.7-jq1.9.js' %}"></script>
+<script src="{% static 'js/bootstrap.js' %}"></script>
+<script>
+    function replace_em(str){
+    str = str.replace(/\</g,'&lt;');
+    str = str.replace(/\>/g,'&gt;');
+    str = str.replace(/\n/g,'<br/>');
+    str = str.replace(/\[em_([0-9]*)\]/g,'<img src="{% static 'plugins/arclist/1.gif' %}" border="0" />');
+    return str;
+    }
+    //------------------------------------------------------------------------------------------
+    //定义全局字典 存放一对一聊天记录和群组聊天记录
+    GLOBAL_CHAT_RECORD_DIC = {
+        'single':{},
+        'group':{},
+    };
+    //定义字典结束
+    //------------------------------------------------------------------------------------------
+//csrf跨站请求伪造
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+console.log(csrftoken);
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+//跨站请求伪造结束
+
+//------------------------------------------------------------------------------------------
+//打开页面自动加载
+    $(document).ready(function(){
+        //csef发送
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        //---------------------------------------------------------------
+            $('.emotion').qqFace({
+                assign:'chat-message', //给输入框赋值
+                path:'/static/plugins/arclist/'    //表情图片存放的路径,
+                });
+{#        getemoj();#}
+        //-----------------------------------------------------------------
+        //发送结束
+
+        $("input[id=search]").focus(function() {
+           $('#searchhide').addClass('hide');
+        });
+
+                //---------------------------测试查找好友-----------------------------
+
+
+        //测试添加
+        $('a[id=addfriends]').click(function(){
+           console.log($('a[id=addfriends]').text());
+        });
+        //测试添加结束
+     });//自动加载结束
+    // 发送到后端函数-----------------------------------------------------------------------------------------------------------------------------
+    function SendMsg(msg_text,file_type){
+        //取出对应好友的id和类型
+        var contact_type = $(".chat-box-title").attr("contact-type");
+        var contact_id = $(".chat-box-title").attr("contact-id");
+        //判断是否为空
+        if (contact_type && contact_id){
+            //把数据发送到的后端的队列
+           var msg_item ={
+                    //来自那个用户
+                    'from': "{{ request.user.userprofile.id }}",
+                    //用户的名字
+                    'from_name': "{{ request.user.userprofile.name }}",
+                    //发送给谁
+                    'to'  :contact_id,
+                    //类型
+                    'type':contact_type,
+                    //内容
+                    'msg' : msg_text
+                };
+        }//end if
+    }
+    //发送后端结束---------------------------------------------------------------------------------------------------------------------------
+    //前端显示对话--------------------------------开始---------------------------------------------------
+    function AddSentMsgIntoBox(msg_text,msg_type){
+        if (msg_type == 'text'){
+            var new_msg_ele = "<div  style='overflow: hidden;'>" +
+                        "<div class='message me'>" +
+                            "<p class='message-info'>" +
+                                "<span class='content'>"+ new Date().toLocaleTimeString()+ "</span>" +
+                            "</p>"+
+                             "' class='me-avatar'/>"+
+                            "<div  class='content' style='overflow: hidden;'>"+
+                            "    <div class='bubble bubble_primary right'>"+
+                            "        <div class='bubble_cont'>"+
+                            "            <div class='plain'>"+
+                            "                    <pre>" + msg_text + "</pre>" +
+                            "            </div>"+
+                            "       </div>"+
+                            "    </div>"+
+                            "</div>"+
+                        "</div>"+
+                    "</div>";
+        {#        }else if (msg_type.startsWith('image') ){#}
+{#            var new_msg_ele = "<div class='msg-item'>" +#}
+{#                                "<span>" + "{{ request.user.userprofile.name }}"  + "</span>" +#}
+{#                                "<span>"  + new Date().toLocaleTimeString() +"</span>" +#}
+{#                                "<div class='msg-text'><img width='300px' src='/static/" +#}
+{#                                "{{ request.user.userprofile.id }}/" + msg_text + "' /></div>" +#}
+{#                              "</div>"#}
+        }else{
+                        var new_msg_ele = "<div  style='overflow: hidden;'>" +
+                        "<div class='message me'>" +
+                            "<p class='message-info'>" +
+                                "<span class='content'>"+ new Date().toLocaleTimeString()+ "</span>" +
+                            "</p>"+
+                             "' class='me-avatar'/>"+
+                            "<div  class='content' style='overflow: hidden;'>"+
+                            "    <div class='bubble bubble_primary right'>"+
+                            "        <div class='bubble_cont'>"+
+                            "            <div class='plain'>"+
+                            "                    <pre><a href='/static/" +
+                                "{{ request.user.userprofile.id }}/"+ msg_text + "' target='_blank' >"+ msg_text +"</a></pre>" +
+                            "            </div>"+
+                            "       </div>"+
+                            "    </div>"+
+                            "</div>"+
+                        "</div>"+
+                    "</div>";
+
+        }
+        $(".chat-box-window").append(new_msg_ele);
+        $('.chat-box-window').animate({
+            scrollTop: $('.chat-box-window')[0].scrollHeight}, 500);
+    }
+ //前端显示对话--------------------------------结束---------------------------------------------------
+
+
+    //当我点击好友事件------------------------------------------------------------------------------------------------------------------
+     function OpenChatWindow(ele){
+            //添加active
+            $(ele).addClass("active");
+            //隐藏其他
+            $(ele).siblings().removeClass("active");
+            var contact_id = $(ele).attr("contact-id");
+            var contact_name = $(ele).find(".friends-name").text();
+            var contact_type = $(ele).attr("contact-type");
+            console.log(contact_id,contact_name,contact_type);
+            //在切换之前把当前的聊天记录保存到字典中
+            var current_session_id = $(".chat-box-title").attr("contact-id");
+            var current_session_type = $(".chat-box-title").attr("contact-type");
+            console.log(current_session_id,current_session_type);
+            //如果有id,那么存入到字典中
+            if (current_session_id){
+                GLOBAL_CHAT_RECORD_DIC[current_session_type][current_session_id] = $('.chat-box-window').html();
+
+            }
+            //把对话框修改成对应的好友
+            $(".chat-box-title").find('.title-name').text(contact_name);
+            //好友id
+            $(".chat-box-title").attr("contact-id",contact_id);
+            //好友类型
+            $(".chat-box-title").attr("contact-type",contact_type);
+            //取出聊天记录
+            var new_contact_chat_record = GLOBAL_CHAT_RECORD_DIC[contact_type][contact_id];
+            //判断聊天记录是否为空
+            if (typeof new_contact_chat_record == 'undefined'){
+                new_contact_chat_record = '';
+            }
+            //不为空那么写入到窗口里
+            $('.chat-box-window').html(new_contact_chat_record);
+            //之后把消息提示隐藏
+            var contact_ele = $(".friends-nav").find(".actives[contact-type='"+ contact_type +"']").filter(".actives[contact-id='"+ contact_id+"']")[0];
+            $(contact_ele).find(".badge").text(0);
+            $(contact_ele).find(".badge").addClass("hide");
+     }
+{#    回话窗口完毕-----------------------------------------------------------------------------------------------------------------#}
+//取数据--------------------------------------------
+
+//数据解析-----------------------------------------------------
+    function ParseNewMsgs(callback){
+        //取出当前对话类型
+    var current_session_type = $(".chat-box-title").attr("contact-type");
+        //取出当前对话id
+    var current_session_id = $(".chat-box-title").attr("contact-id");
+        //循环字典
+    for( var i in callback){
+        //字典类型是
+        console.log(callback[i]);
+        //判断是不是个人消息
+        if (callback[i].type == 'single'){
+            var msg_from_contact_id = callback[i]['from'];
+        }else{ //group
+            var msg_from_contact_id = callback[i]['to'];
+        }
+        //时间戳转换函数
+        var newDate = new Date();
+        newDate.setTime(callback[i].timestamp * 1000);
+        var shijian = newDate.toLocaleTimeString();
+        var msg_item_ele = "<div  style='overflow: hidden;'>" +
+            "<div class='message me' style='text-align:left' >" +
+                "<p class='message-info'>" +
+                    "<span class='content'>"+ shijian + "</span>" +
+                "</p>"+
+                "<img src='"+ callback[i].form_img + "' style='float: left' class='me-avatar'/>"+
+                "<div  class='content' style='overflow: hidden;'>"+
+                "    <div class='bubble bubble_primary left'>"+
+                "        <div class='bubble_cont'>"+
+                "            <div class='plain'>"+
+                "                    <pre>" + callback[i].msg + "</pre>" +
+                "            </div>"+
+                "       </div>"+
+                "    </div>"+
+                "</div>"+
+            "</div>"+
+        "</div>";
+        //判断是不是都是正确的
+        if ( msg_from_contact_id == current_session_id && current_session_type == callback[i].type){
+            //此消息的发送方当前正在跟我聊天
+            $(".chat-box-window").append(msg_item_ele);
+        }else{
+            //此消息发送者当前没打开聊天框，消息暂存内存
+            console.log("保存消息");
+            //判断这个id存不存在字典里
+            if (GLOBAL_CHAT_RECORD_DIC[callback[i].type][msg_from_contact_id]){
+                //如果存在那么追加到这个字典里
+                GLOBAL_CHAT_RECORD_DIC[callback[i].type][msg_from_contact_id] +=msg_item_ele;
+            }else{
+                //如果不存在那么直接插入
+                GLOBAL_CHAT_RECORD_DIC[callback[i].type][msg_from_contact_id] = msg_item_ele;
+            }//end if
+
+            //新消息提醒
+            //取出对应的消息地址
+            var contact_ele = $(".friends-nav").find(".actives[contact-type='"+ callback[i].type +"']").filter(".actives[contact-id='"+msg_from_contact_id+"']")[0];
+            //获取
+            var current_new_msg_num = $(contact_ele).find(".badge").text();
+            //移除hide 让他显示出来
+            $(contact_ele).find(".badge").removeClass("hide");
+            //每次来一条消息就刷新
+            $(contact_ele).find(".badge").text(parseInt(current_new_msg_num)+1);
+        }
+    }
+}
+{#     function getemoj() {#}
+{#         console.log('------------------获取表情---------------------------------');#}
+{#         if($('#chat-message').val().length == 0){#}
+{#             console.log('chat-message为空');#}
+{#             getemoj()#}
+{#         }else{#}
+{#             console.log('chat-message不为空');#}
+{#             alert($('.textflex').append(replace_em($('#chat-message').val())));#}
+{#                $('#chat-message').val('');#}
+{#             getemoj()#}
+{#         }#}
+{##}
+{#        }#}
+
+    //数据解析完毕------------------------------------------------------------------------------------------------
+    //-----------------文件上传---------------------------------------------------------------------------------------------------------
+        function FileUpload(){
+                var ie = !-[1,];
+                    if(ie){
+                        jQuery('input:file').trigger('click').trigger('change');
+                        ajaxpull()
+                    }else{
+                        jQuery('input:file').trigger('click');
+                        ajaxpull()
+                    }
+        GetFileUploadProgress($('#btnfile')[0].files[0]);
+    }
+
+
+    //-----------------文件上传-----------------------------------------------------------------结束--
+</script>
